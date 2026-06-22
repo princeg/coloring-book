@@ -47,7 +47,10 @@
     box-shadow:0 6px 0 rgba(0,0,0,.08); transition:transform .1s ease; padding:8%; overflow:hidden; }
   .card:active { transform:scale(.95); }
   .card svg { position:relative; z-index:1; width:100%; height:100%; }
+  .card .outlineImg { position:relative; z-index:1; }
   .card .thumbColor { position:absolute; inset:8%; width:84%; height:84%; object-fit:contain; z-index:0; }
+  /* Raster (PDF-derived) outlines: white background drops out via multiply, lines stay */
+  .outlineImg { width:100%; height:100%; object-fit:contain; mix-blend-mode:multiply; }
 
   /* ---------- Studio: [left tools] [canvas] [color strip] ---------- */
   #studio { display:flex; align-items:stretch; gap:min(1.6vw,16px);
@@ -173,7 +176,24 @@
     { name:"Puppy", svg:S(`<circle cx="50" cy="42" r="18"/><path d="M32 36 Q24 38 26 54 Q34 54 36 44 Z"/><path d="M68 36 Q76 38 74 54 Q66 54 64 44 Z"/><circle cx="43" cy="42" r="3"/><circle cx="57" cy="42" r="3"/><circle cx="43" cy="42" r="1"/><circle cx="57" cy="42" r="1"/><ellipse cx="50" cy="52" rx="8" ry="6"/><ellipse cx="50" cy="49" rx="3" ry="2"/><path d="M50 51 V55 M50 55 Q46 57 44 55 M50 55 Q54 57 56 55"/><path d="M38 58 Q34 76 44 82 H58 Q66 76 62 58"/><ellipse cx="44" cy="82" rx="5" ry="3"/><ellipse cx="58" cy="82" rx="5" ry="3"/><path d="M62 68 Q74 66 72 56"/><circle cx="60" cy="44" r="5"/>`) },
     { name:"Ladybug", svg:S(`<circle cx="30" cy="68" r="6"/><circle cx="30" cy="58" r="6"/><circle cx="40" cy="63" r="6"/><circle cx="20" cy="63" r="6"/><circle cx="30" cy="63" r="3"/><path d="M30 74 V90"/><path d="M30 82 Q40 80 42 72"/><ellipse cx="62" cy="46" rx="18" ry="15"/><path d="M62 31 V61"/><circle cx="62" cy="30" r="6"/><path d="M59 25 L56 20 M65 25 L68 20"/><circle cx="54" cy="42" r="2.5"/><circle cx="70" cy="42" r="2.5"/><circle cx="54" cy="52" r="2.5"/><circle cx="70" cy="52" r="2.5"/><path d="M47 42 L41 40 M47 47 L41 49 M77 42 L83 40 M77 47 L83 49"/>`) },
     { name:"Robot", svg:S(`<rect x="38" y="16" width="24" height="20" rx="3"/><circle cx="45" cy="26" r="3"/><circle cx="55" cy="26" r="3"/><path d="M44 32 H56"/><path d="M50 16 V10"/><circle cx="50" cy="8" r="2"/><rect x="34" y="40" width="32" height="30" rx="3"/><circle cx="50" cy="50" r="4"/><rect x="42" y="58" width="16" height="8"/><path d="M44 61 H56 M44 64 H56"/><rect x="24" y="42" width="8" height="20" rx="3"/><rect x="68" y="42" width="8" height="20" rx="3"/><rect x="40" y="72" width="8" height="14" rx="2"/><rect x="52" y="72" width="8" height="14" rx="2"/>`) },
+    { name:"Flip Flops",     img:"pics/flip-flops.png" },
+    { name:"Pool Bear",      img:"pics/pool-bear.png" },
+    { name:"Summer Fun",     img:"pics/summer-fun.png" },
+    { name:"Hello Sunshine", img:"pics/hello-sunshine.png" },
+    { name:"Dolphins",       img:"pics/dolphins.png" },
+    { name:"Camera",         img:"pics/camera.png" },
+    { name:"Summer Crab",    img:"pics/summer-1.png" },
+    { name:"Summer 2",       img:"pics/summer-2.png" },
+    { name:"Summer 3",       img:"pics/summer-3.png" },
+    { name:"Summer 4",       img:"pics/summer-4.png" },
+    { name:"Summer 5",       img:"pics/summer-5.png" },
+    { name:"Summer 6",       img:"pics/summer-6.png" },
+    { name:"Summer 7",       img:"pics/summer-7.png" },
+    { name:"Summer 8",       img:"pics/summer-8.png" },
+    { name:"Summer 9",       img:"pics/summer-9.png" },
+    { name:"Summer 10",      img:"pics/summer-10.png" },
   ];
+  function outlineHTML(pic){ return pic.img ? `<img class="outlineImg" src="${pic.img}" alt="">` : pic.svg; }
 
   // ---------- Colors & sizes ----------
   // Full spectrum: grayscale ramp + hue families, each in light->dark shades
@@ -350,7 +370,7 @@
     const make = (o)=>{
       const el = document.createElement("div"); el.className = "reelItem";
       const img = document.createElement("img"); img.className = "reelColor"; img.src = o.d;
-      const out = document.createElement("div"); out.className = "reelOutline"; out.innerHTML = PICTURES[o.i].svg;
+      const out = document.createElement("div"); out.className = "reelOutline"; out.innerHTML = outlineHTML(PICTURES[o.i]);
       el.appendChild(img); el.appendChild(out);
       el.addEventListener("click", ()=> openPicture(o.i));
       return el;
@@ -378,7 +398,7 @@
   PICTURES.forEach((pic, i)=>{
     const card = document.createElement("div");
     card.className = "card";
-    card.innerHTML = pic.svg;
+    card.innerHTML = outlineHTML(pic);
     card.addEventListener("click", ()=> openPicture(i));
     grid.appendChild(card); cardEls.push(card);
     refreshCard(i);
@@ -521,7 +541,7 @@
   function openPicture(i){
     currentIndex = i;
     ensureAudio(); if(!musicTimer) startMusic();
-    document.getElementById("outline").innerHTML = PICTURES[i].svg;
+    document.getElementById("outline").innerHTML = outlineHTML(PICTURES[i]);
     fillWhite();
     undoStack.length = 0;
     // restore previously saved coloring for this picture, if any
