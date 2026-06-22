@@ -1,5 +1,5 @@
 // Offline cache so the coloring book works with no Wi-Fi once loaded once.
-const CACHE = "saira-coloring-v2";
+const CACHE = "saira-coloring-v3";
 const ASSETS = [
   "./", "index.html", "manifest.webmanifest",
   "apple-touch-icon.png", "icon-192.png", "icon-512.png"
