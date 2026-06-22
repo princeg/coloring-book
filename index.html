@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#ffb784" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<title>Saira's Coloring Book</title>
+<style>
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; padding:0; height:100%; width:100%; overflow:hidden;
+    font-family:"Chalkboard SE","Comic Sans MS",ui-rounded,system-ui,sans-serif;
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+    touch-action:none; overscroll-behavior:none; background:#fff3e9; }
+  .screen { position:fixed; inset:0; }
+  .hidden { display:none !important; }
+
+  /* ---------- Gallery ---------- */
+  #gallery { background:radial-gradient(120% 90% at 50% 0%, #fff6ee 0%, #ffe6d2 55%, #ffd9bf 100%);
+    overflow-y:auto; -webkit-overflow-scrolling:touch; padding:max(14px,2.5vw); }
+  #gallery h1 { text-align:center; color:#ff7a3d; margin:.2em 0 .5em; font-size:min(6vw,40px); text-shadow:0 2px 0 #fff; }
+  .floatbtn { position:absolute; top:min(2.5vw,18px); right:min(2.5vw,18px); z-index:50;
+    width:min(11vw,58px); height:min(11vw,58px); border:none; border-radius:50%; cursor:pointer;
+    background:#fff; box-shadow:0 4px 0 rgba(0,0,0,.15); font-size:min(6vw,30px); }
+  .floatbtn:active { transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.15); }
+  #grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:min(2.6vw,22px); max-width:1300px; margin:0 auto; }
+  @media (orientation:portrait){ #grid{ grid-template-columns:repeat(3,1fr); } }
+  .card { position:relative; background:#fff; border:4px solid #bfe3ff; border-radius:22px; aspect-ratio:1;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:0 6px 0 rgba(0,0,0,.08); transition:transform .1s ease; padding:8%; overflow:hidden; }
+  .card:active { transform:scale(.95); }
+  .card svg { position:relative; z-index:1; width:100%; height:100%; }
+  .card .thumbColor { position:absolute; inset:8%; width:84%; height:84%; object-fit:contain; z-index:0; }
+
+  /* ---------- Studio: [left tools] [canvas] [color strip] ---------- */
+  #studio { display:flex; align-items:stretch; gap:min(1.6vw,16px);
+    background:radial-gradient(120% 120% at 30% 0%, #ffd2ad 0%, #ffb784 60%, #ff9f63 100%);
+    padding:min(1.6vw,16px); }
+
+  #leftbar { width:min(15vw,104px); display:flex; flex-direction:column; align-items:center;
+    gap:min(1.2vh,10px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .iconbtn { width:100%; aspect-ratio:1; max-height:min(12.5vh,92px); flex:0 0 auto; border:none; border-radius:22px;
+    cursor:pointer; background:#fff; box-shadow:0 4px 0 rgba(0,0,0,.14); font-family:inherit; color:#555;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+  .iconbtn:active { transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.14); }
+  .iconbtn.active { background:#ffe2cc; box-shadow:0 0 0 3px #ff9f63; }
+  .iconbtn svg { width:44%; height:44%; }
+  .iconbtn span { font-size:min(1.5vh,13px); }
+  .iconbtn.back { background:#6c5ce7; box-shadow:0 4px 0 #4b3fb0; }
+  .iconbtn.back svg { width:52%; height:52%; }
+  .iconbtn.save { background:#34c759; color:#fff; box-shadow:0 4px 0 #229544; }
+
+  .sizecol { width:100%; flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:min(.9vh,7px);
+    background:rgba(255,255,255,.5); border-radius:20px; padding:min(1vh,8px) 0; }
+  .sizeBtn { width:72%; aspect-ratio:1; max-height:min(7.5vh,54px); border-radius:50%; border:none; cursor:pointer;
+    background:#fff; box-shadow:0 3px 0 rgba(0,0,0,.12); display:flex; align-items:center; justify-content:center; }
+  .sizeBtn.active { background:#ffe2cc; box-shadow:0 0 0 3px #ff9f63; }
+  .sizeBtn .dot { background:#444; border-radius:50%; }
+
+  #stage { position:relative; flex:1; align-self:center; aspect-ratio:1; max-height:100%; max-width:100%;
+    background:#fff; border-radius:24px; box-shadow:0 14px 34px rgba(0,0,0,.22); overflow:hidden; }
+  #paint { position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; }
+  #outline { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  #outline svg { width:100%; height:100%; }
+
+  /* Right color spectrum strip, docked in the corner */
+  #palette { width:min(17vw,132px); height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    display:grid; grid-template-columns:1fr 1fr; gap:5px; align-content:start;
+    background:rgba(255,255,255,.5); border-radius:18px; padding:6px; }
+  .swatch { aspect-ratio:1; border-radius:7px; cursor:pointer; border:2px solid rgba(0,0,0,.10); }
+  .swatch.active { border:3px solid #222; box-shadow:0 0 0 2px #fff, 0 0 0 4px #ff9f63; }
+  .swatch.special { border-radius:50%; border-color:rgba(0,0,0,.18); }
+
+  #toast { position:absolute; bottom:8%; left:50%; transform:translateX(-50%) translateY(10px);
+    background:rgba(40,40,40,.92); color:#fff; padding:.5em 1.3em; border-radius:999px;
+    font-size:min(3vh,22px); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:20; }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ===================== GALLERY ===================== -->
+<div id="gallery" class="screen">
+  <button id="musicBtnG" class="floatbtn" title="Music">&#x1F3B5;</button>
+  <h1>Pick a picture to color!</h1>
+  <div id="grid"></div>
+</div>
+
+<!-- ===================== STUDIO ===================== -->
+<div id="studio" class="screen hidden">
+  <div id="leftbar">
+    <button class="iconbtn back" id="backBtn" title="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"/></svg>
+    </button>
+    <div id="sizes" class="sizecol"></div>
+    <button class="iconbtn" id="eraserBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linejoin="round"><path d="M4 16 L12 8 l6 6 -5 5 H7 Z"/><path d="M12 8 l4 -4 4 4 -4 4"/></svg>
+      <span>Eraser</span>
+    </button>
+    <button class="iconbtn" id="undoBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7 L4 12 L9 17"/><path d="M4 12 H14 a6 6 0 0 1 0 12 H11"/></svg>
+      <span>Undo</span>
+    </button>
+    <button class="iconbtn" id="clearBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7 H19 M9 7 V5 H15 V7 M7 7 L8 20 H16 L17 7"/></svg>
+      <span>Clear</span>
+    </button>
+    <button class="iconbtn save" id="saveBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><path d="M5 4 H16 L20 8 V20 H5 Z"/><path d="M8 4 V9 H15 V4"/><rect x="8" y="13" width="8" height="6"/></svg>
+      <span>Save</span>
+    </button>
+    <button class="iconbtn active" id="musicBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="18" r="2.4"/><circle cx="17" cy="16" r="2.4"/><path d="M9.4 18 V6 L19.4 4 V16"/></svg>
+      <span>Music</span>
+    </button>
+  </div>
+
+  <div id="stage">
+    <canvas id="paint"></canvas>
+    <div id="outline"></div>
+  </div>
+
+  <div id="palette"></div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+"use strict";
+(function(){
+  // ---------- Outline pictures (black line art, transparent inside) ----------
+  const S = (inner) => `<svg viewBox="0 0 100 100" fill="none" stroke="#1f1f1f" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round">${inner}</svg>`;
+  const PICTURES = [
+    { name:"Princess", svg:S(`<path d="M40 18 L43 11 L50 16 L57 11 L60 18 Z"/><circle cx="50" cy="30" r="11"/><path d="M39 28 Q35 40 40 47"/><path d="M61 28 Q65 40 60 47"/><circle cx="46" cy="30" r="1.4"/><circle cx="54" cy="30" r="1.4"/><path d="M46 35 Q50 38 54 35"/><path d="M47 41 V45"/><path d="M53 41 V45"/><path d="M44 45 Q39 47 37 53 L30 86 Q50 92 70 86 L63 53 Q61 47 56 45 Z"/><path d="M40 62 Q50 66 60 62"/><path d="M34 75 Q50 81 66 75"/><path d="M44 47 Q34 52 33 61"/><path d="M56 47 Q66 52 67 61"/><circle cx="50" cy="51" r="2"/>`) },
+    { name:"Unicorn", svg:S(`<path d="M47 6 L53 6 L50.5 22 L49.5 22 Z"/><path d="M48 11 H52"/><path d="M48.4 16 H51.6"/><path d="M40 24 L36 14 L46 22 Z"/><path d="M60 24 L64 14 L54 22 Z"/><path d="M38 24 Q32 40 40 60 Q46 72 50 72 Q54 72 60 60 Q68 40 62 24 Q50 18 38 24 Z"/><path d="M38 24 Q26 30 30 44 Q24 50 30 58"/><path d="M62 24 Q74 30 70 44 Q76 50 70 58"/><path d="M43 41 Q45 45 47 41"/><path d="M53 41 Q55 45 57 41"/><ellipse cx="50" cy="61" rx="8" ry="6"/><circle cx="47" cy="61" r="1"/><circle cx="53" cy="61" r="1"/>`) },
+    { name:"Castle", svg:S(`<rect x="20" y="42" width="15" height="44"/><rect x="65" y="42" width="15" height="44"/><rect x="40" y="34" width="20" height="52"/><path d="M18 42 L27.5 26 L37 42 Z"/><path d="M63 42 L72.5 26 L82 42 Z"/><path d="M38 34 L50 16 L62 34 Z"/><path d="M27.5 26 V18 L33 21 L27.5 24"/><path d="M72.5 26 V18 L78 21 L72.5 24"/><path d="M50 16 V8 L56 11 L50 14"/><path d="M45 86 V64 a5 5 0 0 1 10 0 V86"/><rect x="25" y="50" width="5" height="8" rx="2.5"/><rect x="70" y="50" width="5" height="8" rx="2.5"/><rect x="44" y="44" width="5" height="8" rx="2.5"/><rect x="51" y="44" width="5" height="8" rx="2.5"/><path d="M12 86 H88"/>`) },
+    { name:"Mermaid", svg:S(`<circle cx="50" cy="24" r="9"/><path d="M41 22 Q34 32 38 45"/><path d="M59 22 Q66 32 62 45"/><path d="M44 16 Q50 12 56 16"/><circle cx="47" cy="24" r="1.2"/><circle cx="53" cy="24" r="1.2"/><path d="M47 28 Q50 30 53 28"/><path d="M44 33 Q42 44 46 54 L54 54 Q58 44 56 33"/><path d="M44 41 Q50 45 56 41"/><path d="M44 35 Q36 42 38 52"/><path d="M56 35 Q64 42 62 52"/><path d="M46 54 Q40 70 50 78 Q60 70 54 54"/><path d="M50 78 Q40 84 37 92 Q50 87 50 87 Q50 87 63 92 Q60 84 50 78 Z"/><path d="M46 60 Q50 62 54 60"/><path d="M45 68 Q50 71 55 68"/>`) },
+    { name:"Cupcake", svg:S(`<path d="M30 56 L36 86 H64 L70 56 Z"/><path d="M42 58 V84"/><path d="M50 58 V86"/><path d="M58 58 V84"/><path d="M30 56 Q26 44 36 42 Q34 32 46 34 Q48 24 58 30 Q70 30 66 42 Q76 46 70 56 Z"/><circle cx="50" cy="26" r="4"/><path d="M50 22 Q54 16 59 16"/>`) },
+    { name:"Owl", svg:S(`<ellipse cx="50" cy="54" rx="26" ry="30"/><path d="M30 30 L26 18 L38 28"/><path d="M70 30 L74 18 L62 28"/><circle cx="40" cy="44" r="9"/><circle cx="60" cy="44" r="9"/><circle cx="40" cy="44" r="3"/><circle cx="60" cy="44" r="3"/><path d="M47 50 L50 58 L53 50 Z"/><path d="M26 50 Q22 64 30 76"/><path d="M74 50 Q78 64 70 76"/><path d="M40 64 Q50 68 60 64"/><path d="M38 72 Q50 77 62 72"/><path d="M44 84 V88 M41 88 H47"/><path d="M56 84 V88 M53 88 H59"/><path d="M16 84 H84"/>`) },
+    { name:"Star",  svg:S(`<path d="M50 8 L61 37 L92 38 L67 57 L76 88 L50 70 L24 88 L33 57 L8 38 L39 37 Z"/>`) },
+    { name:"Heart", svg:S(`<path d="M50 86 C16 62 12 38 27 27 C39 18 50 27 50 38 C50 27 61 18 73 27 C88 38 84 62 50 86 Z"/>`) },
+    { name:"Flower",svg:S(`<circle cx="50" cy="40" r="11"/><circle cx="50" cy="21" r="11"/><circle cx="68" cy="32" r="11"/><circle cx="68" cy="51" r="11"/><circle cx="32" cy="51" r="11"/><circle cx="32" cy="32" r="11"/><path d="M50 60 V92"/><path d="M50 78 q15 -2 19 -15"/><path d="M50 84 q-15 -2 -19 -14"/>`) },
+    { name:"House", svg:S(`<rect x="22" y="46" width="56" height="42"/><path d="M15 48 L50 18 L85 48"/><rect x="40" y="63" width="16" height="25"/><rect x="28" y="55" width="12" height="12"/><rect x="60" y="55" width="12" height="12"/><rect x="64" y="26" width="9" height="14"/>`) },
+    { name:"Sun",   svg:S(`<circle cx="50" cy="50" r="22"/><path d="M50 12 V23"/><path d="M50 77 V88"/><path d="M12 50 H23"/><path d="M77 50 H88"/><path d="M23 23 L31 31"/><path d="M77 23 L69 31"/><path d="M23 77 L31 69"/><path d="M77 77 L69 69"/><circle cx="43" cy="46" r="2.3"/><circle cx="57" cy="46" r="2.3"/><path d="M42 56 q8 8 16 0"/>`) },
+    { name:"Fish",  svg:S(`<path d="M20 50 Q40 26 66 50 Q40 74 20 50 Z"/><path d="M66 50 L86 36 L86 64 Z"/><circle cx="31" cy="46" r="2.4"/><path d="M40 36 Q46 31 52 35"/><path d="M40 64 Q46 69 52 65"/>`) },
+    { name:"Butterfly", svg:S(`<path d="M50 30 V72"/><ellipse cx="33" cy="40" rx="16" ry="13"/><ellipse cx="67" cy="40" rx="16" ry="13"/><ellipse cx="36" cy="64" rx="12" ry="10"/><ellipse cx="64" cy="64" rx="12" ry="10"/><path d="M50 30 Q44 19 37 18"/><path d="M50 30 Q56 19 63 18"/>`) },
+    { name:"Car",   svg:S(`<path d="M10 62 L17 48 H34 L43 37 H62 L71 48 H90 V62 Z"/><circle cx="30" cy="62" r="8"/><circle cx="70" cy="62" r="8"/><rect x="45" y="41" width="14" height="9"/><rect x="30" y="41" width="11" height="9"/>`) },
+    { name:"Balloon", svg:S(`<ellipse cx="50" cy="38" rx="25" ry="29"/><path d="M45 65 L50 72 L55 65 Z"/><path d="M50 72 Q58 84 49 94"/>`) },
+    { name:"Ice cream", svg:S(`<path d="M35 44 L50 90 L65 44"/><path d="M40 56 L52 70 M48 50 L62 64"/><circle cx="43" cy="38" r="12"/><circle cx="58" cy="38" r="12"/><circle cx="50" cy="27" r="12"/>`) },
+    { name:"Kitty", svg:S(`<circle cx="50" cy="54" r="27"/><path d="M30 38 L25 16 L43 30 Z"/><path d="M70 38 L75 16 L57 30 Z"/><circle cx="41" cy="52" r="3"/><circle cx="59" cy="52" r="3"/><path d="M47 60 L50 64 L53 60 Z"/><path d="M50 64 V69"/><path d="M50 67 Q44 71 38 69"/><path d="M50 67 Q56 71 62 69"/><path d="M31 56 H15"/><path d="M31 62 H17"/><path d="M69 56 H85"/><path d="M69 62 H83"/>`) },
+    { name:"Rocket", svg:S(`<path d="M50 12 Q66 28 66 52 V66 H34 V52 Q34 28 50 12 Z"/><circle cx="50" cy="40" r="8"/><path d="M34 56 L22 72 L34 66"/><path d="M66 56 L78 72 L66 66"/><path d="M42 66 H58 L52 82 H48 Z"/>`) },
+  ];
+
+  // ---------- Colors & sizes ----------
+  // Full spectrum: grayscale ramp + hue families, each in light->dark shades
+  const COLORS = [];
+  [100, 86, 72, 58, 42, 26, 10, 0].forEach(l => COLORS.push(`hsl(0 0% ${l}%)`));
+  const HUES = [0, 16, 32, 48, 90, 140, 168, 198, 222, 252, 282, 318, 344];
+  HUES.forEach(h => [84, 70, 56, 44, 30].forEach(l => COLORS.push(`hsl(${h} 85% ${l}%)`)));
+  const DEFAULT_INDEX = 10; // a nice medium red (after the 8 grays)
+  const SIZES = [8, 16, 28, 46];
+  const SPRINKLE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#1e88ff","#9c27b0","#ff2d92","#00bcd4","#ffffff"];
+  // Special glitter brushes Saira likes
+  const SPECIALS = [
+    { id:"sparkle",  bg:"radial-gradient(circle at 50% 38%, #ffffff, #fff0a6 45%, #ffd700 78%)" },
+    { id:"sprinkle", bg:"conic-gradient(#ff3b30,#ff9500,#ffcc00,#34c759,#1e88ff,#9c27b0,#ff2d92,#ff3b30)" },
+  ];
+
+  // ---------- Canvas ----------
+  const RES = 1200;
+  const canvas = document.getElementById("paint");
+  const ctx = canvas.getContext("2d");
+  canvas.width = RES; canvas.height = RES;
+
+  let curColor = "#ff3b30", curSize = 16, erasing = false, brushMode = "solid";
+  let drawing = false, drawPid = null, last = null;
+  const undoStack = [];
+
+  function fillWhite(){ ctx.fillStyle = "#ffffff"; ctx.fillRect(0,0,RES,RES); }
+  function pushUndo(){
+    try { undoStack.push(ctx.getImageData(0,0,RES,RES)); if(undoStack.length>12) undoStack.shift(); } catch(e){}
+  }
+  function undo(){ const img = undoStack.pop(); if(img) ctx.putImageData(img,0,0); }
+  function clearAll(){ pushUndo(); fillWhite(); }
+
+  function pos(e){
+    const r = canvas.getBoundingClientRect();
+    return { x:(e.clientX - r.left) * (RES / r.width), y:(e.clientY - r.top) * (RES / r.height) };
+  }
+  function paintStyle(){
+    ctx.strokeStyle = erasing ? "#ffffff" : curColor;
+    ctx.fillStyle   = erasing ? "#ffffff" : curColor;
+    ctx.lineWidth   = erasing ? curSize*1.7 : curSize;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+  }
+  function dotSolid(p){ paintStyle(); ctx.beginPath(); ctx.arc(p.x, p.y, ctx.lineWidth/2, 0, Math.PI*2); ctx.fill(); }
+  function segSolid(a,b){ paintStyle(); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+
+  // ---- Glitter brushes ----
+  function depositAlong(a,b,fn){
+    const dx=b.x-a.x, dy=b.y-a.y, dist=Math.hypot(dx,dy);
+    const step=Math.max(2, curSize*0.5), n=Math.max(1, Math.floor(dist/step));
+    for(let i=0;i<=n;i++){ const t=i/n; fn(a.x+dx*t, a.y+dy*t); }
+  }
+  function star(x,y,s){
+    ctx.beginPath();
+    ctx.moveTo(x,y-s); ctx.lineTo(x+s*0.3,y-s*0.3); ctx.lineTo(x+s,y); ctx.lineTo(x+s*0.3,y+s*0.3);
+    ctx.lineTo(x,y+s); ctx.lineTo(x-s*0.3,y+s*0.3); ctx.lineTo(x-s,y); ctx.lineTo(x-s*0.3,y-s*0.3);
+    ctx.closePath(); ctx.fill();
+  }
+  const SPARKLE_SPECK = ["#ffffff","#fff3b0","#ffd700","#ffffff"];
+  function sparkleAt(x,y){
+    const r = curSize;
+    for(let k=0;k<2;k++){
+      const ang=Math.random()*6.283, rad=Math.random()*r;
+      ctx.fillStyle = SPARKLE_SPECK[(Math.random()*SPARKLE_SPECK.length)|0];
+      star(x+Math.cos(ang)*rad, y+Math.sin(ang)*rad, 1 + Math.random()*(curSize*0.16+1));
+    }
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath(); ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  }
+  function sprinkleAt(x,y){
+    if(Math.random() > 0.6) return; // space them out like real sprinkles
+    const len=Math.max(4,curSize*0.7), w=Math.max(2,curSize*0.28);
+    ctx.save();
+    ctx.translate(x+(Math.random()-.5)*curSize, y+(Math.random()-.5)*curSize);
+    ctx.rotate(Math.random()*Math.PI);
+    ctx.fillStyle = SPRINKLE_COLORS[(Math.random()*SPRINKLE_COLORS.length)|0];
+    roundRect(-len/2,-w/2,len,w,w/2); ctx.fill();
+    ctx.restore();
+  }
+
+  function paintDot(p){
+    if(erasing){ dotSolid(p); return; }
+    if(brushMode==="sprinkle"){ sprinkleAt(p.x,p.y); return; }
+    dotSolid(p);
+    if(brushMode==="sparkle") sparkleAt(p.x,p.y);
+  }
+  function paintSeg(a,b){
+    if(erasing){ segSolid(a,b); return; }
+    if(brushMode==="sprinkle"){ depositAlong(a,b,sprinkleAt); return; }
+    segSolid(a,b);
+    if(brushMode==="sparkle") depositAlong(a,b,sparkleAt);
+  }
+
+  canvas.addEventListener("pointerdown", (e)=>{
+    e.preventDefault();
+    if(drawing) return;
+    drawing = true; drawPid = e.pointerId;
+    pushUndo();
+    try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+    last = pos(e); paintDot(last);
+  });
+  canvas.addEventListener("pointermove", (e)=>{
+    if(!drawing || e.pointerId !== drawPid) return;
+    e.preventDefault();
+    const p = pos(e); paintSeg(last, p); last = p;
+  });
+  function endDraw(e){
+    if(!drawing || (e && e.pointerId !== drawPid)) return;
+    drawing = false; drawPid = null; last = null;
+  }
+  canvas.addEventListener("pointerup", endDraw);
+  canvas.addEventListener("pointercancel", endDraw);
+
+  // ---------- Saved coloring (localStorage) ----------
+  let currentIndex = 0;
+  function thumbKey(i){ return "saira-coloring:" + PICTURES[i].name; }
+  function refreshCard(i){
+    const card = cardEls[i];
+    const data = localStorage.getItem(thumbKey(i));
+    let img = card.querySelector(".thumbColor");
+    if(data){
+      if(!img){ img = document.createElement("img"); img.className = "thumbColor"; card.insertBefore(img, card.firstChild); }
+      img.src = data;
+    } else if(img){ img.remove(); }
+  }
+
+  // ---------- Build gallery ----------
+  const grid = document.getElementById("grid");
+  const cardEls = [];
+  PICTURES.forEach((pic, i)=>{
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = pic.svg;
+    card.addEventListener("click", ()=> openPicture(i));
+    grid.appendChild(card); cardEls.push(card);
+    refreshCard(i);
+  });
+
+  // ---------- Build palette ----------
+  const palette = document.getElementById("palette");
+  let swatchEls = [], specialEls = [];
+  SPECIALS.forEach((sp)=>{
+    const s = document.createElement("div");
+    s.className = "swatch special"; s.style.background = sp.bg; s.title = sp.id;
+    s.addEventListener("click", ()=> pickSpecial(sp.id, s));
+    palette.appendChild(s); specialEls.push(s);
+  });
+  COLORS.forEach((c)=>{
+    const s = document.createElement("div");
+    s.className = "swatch"; s.style.background = c;
+    s.addEventListener("click", ()=> pickColor(c, s));
+    palette.appendChild(s); swatchEls.push(s);
+  });
+  function clearSwatchActive(){ swatchEls.forEach(x=>x.classList.remove("active")); specialEls.forEach(x=>x.classList.remove("active")); }
+  function pickColor(c, el){
+    curColor = c; erasing = false; brushMode = "solid";
+    clearSwatchActive(); el.classList.add("active");
+    document.getElementById("eraserBtn").classList.remove("active");
+  }
+  function pickSpecial(id, el){
+    brushMode = id; erasing = false;
+    clearSwatchActive(); el.classList.add("active");
+    document.getElementById("eraserBtn").classList.remove("active");
+  }
+
+  // ---------- Build sizes ----------
+  const sizes = document.getElementById("sizes");
+  let sizeEls = [];
+  SIZES.forEach((sz)=>{
+    const b = document.createElement("button");
+    b.className = "sizeBtn";
+    const d = document.createElement("div");
+    d.className = "dot";
+    const px = Math.max(8, sz * 0.7);
+    d.style.width = px + "px"; d.style.height = px + "px";
+    b.appendChild(d);
+    b.addEventListener("click", ()=> pickSize(sz, b));
+    sizes.appendChild(b); sizeEls.push(b);
+  });
+  function pickSize(sz, el){
+    curSize = sz;
+    sizeEls.forEach(x=> x.classList.remove("active"));
+    el.classList.add("active");
+  }
+
+  // ---------- Tool buttons ----------
+  const eraserBtn = document.getElementById("eraserBtn");
+  eraserBtn.addEventListener("click", ()=>{
+    erasing = true;
+    eraserBtn.classList.add("active");
+    clearSwatchActive();
+  });
+  document.getElementById("undoBtn").addEventListener("click", undo);
+  document.getElementById("clearBtn").addEventListener("click", clearAll);
+  document.getElementById("backBtn").addEventListener("click", ()=>{
+    refreshCard(currentIndex);
+    document.getElementById("studio").classList.add("hidden");
+    document.getElementById("gallery").classList.remove("hidden");
+  });
+
+  // ---------- Save ----------
+  let toastT = null;
+  function showToast(msg){
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastT); toastT = setTimeout(()=> t.classList.remove("show"), 1200);
+  }
+  document.getElementById("saveBtn").addEventListener("click", ()=>{
+    try{
+      localStorage.setItem(thumbKey(currentIndex), canvas.toDataURL("image/jpeg", 0.82));
+      refreshCard(currentIndex);
+      showToast("Saved!");
+    }catch(e){ showToast("Couldn't save — storage full"); }
+  });
+
+  // ---------- Vibey background music (generated, offline-friendly) ----------
+  let actx = null, musicOn = true, musicTimer = null, musicGain = null, mStep = 0;
+  function ensureAudio(){
+    if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    if(actx && actx.state === "suspended") actx.resume();
+  }
+  const PROG = [ [220,277,330], [196,247,294], [175,220,262], [196,247,330] ]; // gentle lo-fi loop
+  function mNote(freq, dur, vol, type){
+    if(!actx || !musicGain) return;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || "sine"; o.frequency.value = freq;
+    const t = actx.currentTime;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t+0.06);
+    g.gain.exponentialRampToValueAtTime(0.0008, t+dur);
+    o.connect(g); g.connect(musicGain);
+    o.start(t); o.stop(t+dur+0.05);
+  }
+  function startMusic(){
+    if(!actx || musicTimer) return;
+    musicGain = actx.createGain();
+    musicGain.gain.value = musicOn ? 0.05 : 0.0;
+    musicGain.connect(actx.destination);
+    mStep = 0;
+    musicTimer = setInterval(()=>{
+      const chord = PROG[Math.floor(mStep/4) % PROG.length];
+      mNote(chord[mStep % chord.length] * 2, 0.7, 0.5, "triangle");      // soft bell arpeggio
+      if(mStep % 4 === 0) chord.forEach(f => mNote(f, 2.2, 0.22, "sine")); // warm pad chord
+      mStep++;
+    }, 320);
+  }
+  function setMusic(on){
+    musicOn = on;
+    if(musicGain) musicGain.gain.value = on ? 0.05 : 0.0;
+    document.getElementById("musicBtn").classList.toggle("active", on);
+    const g = document.getElementById("musicBtnG");
+    if(g) g.innerHTML = on ? "&#x1F3B5;" : "&#x1F507;";
+  }
+  function toggleMusic(){ ensureAudio(); if(!musicTimer) startMusic(); setMusic(!musicOn); }
+  document.getElementById("musicBtn").addEventListener("click", toggleMusic);
+  document.getElementById("musicBtnG").addEventListener("click", toggleMusic);
+
+  // ---------- Open a picture ----------
+  function openPicture(i){
+    currentIndex = i;
+    ensureAudio(); if(!musicTimer) startMusic();
+    document.getElementById("outline").innerHTML = PICTURES[i].svg;
+    fillWhite();
+    undoStack.length = 0;
+    // restore previously saved coloring for this picture, if any
+    const data = localStorage.getItem(thumbKey(i));
+    if(data){ const img = new Image(); img.onload = ()=> ctx.drawImage(img, 0, 0, RES, RES); img.src = data; }
+    // default tool state
+    erasing = false;
+    pickColor(COLORS[DEFAULT_INDEX], swatchEls[DEFAULT_INDEX]);
+    pickSize(SIZES[1], sizeEls[1]);
+    document.getElementById("gallery").classList.add("hidden");
+    document.getElementById("studio").classList.remove("hidden");
+  }
+
+  // initial selected states (in case studio shown without openPicture)
+  swatchEls[DEFAULT_INDEX].classList.add("active");
+  sizeEls[1].classList.add("active");
+  fillWhite();
+
+  document.addEventListener("gesturestart", e=>e.preventDefault());
+
+  // Offline support when hosted (https)
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); });
+  }
+})();
+</script>
+</body>
+</html>
