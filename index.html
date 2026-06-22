@@ -27,6 +27,19 @@
     width:min(11vw,58px); height:min(11vw,58px); border:none; border-radius:50%; cursor:pointer;
     background:#fff; box-shadow:0 4px 0 rgba(0,0,0,.15); font-size:min(6vw,30px); }
   .floatbtn:active { transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.15); }
+  #reelWrap { max-width:1300px; margin:0 auto min(2vh,16px); }
+  .reelTitle { color:#ff7a3d; text-align:center; margin:.1em 0 .35em; font-size:min(4.6vw,26px); text-shadow:0 2px 0 #fff; }
+  .reel { overflow:hidden;
+    -webkit-mask-image:linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+            mask-image:linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+  .reelTrack { display:flex; gap:min(2vw,16px); width:max-content; }
+  .reelTrack:active { animation-play-state:paused; }
+  .reelItem { position:relative; flex:0 0 auto; height:min(20vh,148px); aspect-ratio:1; background:#fff;
+    border:3px solid #bfe3ff; border-radius:16px; overflow:hidden; cursor:pointer; box-shadow:0 4px 0 rgba(0,0,0,.08); padding:6%; }
+  .reelColor { position:absolute; inset:6%; width:88%; height:88%; object-fit:contain; z-index:0; }
+  .reelOutline { position:absolute; inset:6%; width:88%; height:88%; z-index:1; pointer-events:none; }
+  .reelOutline svg { width:100%; height:100%; }
+  @keyframes marquee { from{ transform:translateX(0);} to{ transform:translateX(-50%);} }
   #grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:min(2.6vw,22px); max-width:1300px; margin:0 auto; }
   @media (orientation:portrait){ #grid{ grid-template-columns:repeat(3,1fr); } }
   .card { position:relative; background:#fff; border:4px solid #bfe3ff; border-radius:22px; aspect-ratio:1;
@@ -87,6 +100,10 @@
 <div id="gallery" class="screen">
   <button id="musicBtnG" class="floatbtn" title="Music">&#x1F3B5;</button>
   <h1>Pick a picture to color!</h1>
+  <div id="reelWrap" class="hidden">
+    <h2 class="reelTitle">&#x1F3A8; My Colorings</h2>
+    <div class="reel"><div class="reelTrack" id="reelTrack"></div></div>
+  </div>
   <div id="grid"></div>
 </div>
 
@@ -141,18 +158,13 @@
     { name:"Mermaid", svg:S(`<circle cx="50" cy="24" r="9"/><path d="M41 22 Q34 32 38 45"/><path d="M59 22 Q66 32 62 45"/><path d="M44 16 Q50 12 56 16"/><circle cx="47" cy="24" r="1.2"/><circle cx="53" cy="24" r="1.2"/><path d="M47 28 Q50 30 53 28"/><path d="M44 33 Q42 44 46 54 L54 54 Q58 44 56 33"/><path d="M44 41 Q50 45 56 41"/><path d="M44 35 Q36 42 38 52"/><path d="M56 35 Q64 42 62 52"/><path d="M46 54 Q40 70 50 78 Q60 70 54 54"/><path d="M50 78 Q40 84 37 92 Q50 87 50 87 Q50 87 63 92 Q60 84 50 78 Z"/><path d="M46 60 Q50 62 54 60"/><path d="M45 68 Q50 71 55 68"/>`) },
     { name:"Cupcake", svg:S(`<path d="M30 56 L36 86 H64 L70 56 Z"/><path d="M42 58 V84"/><path d="M50 58 V86"/><path d="M58 58 V84"/><path d="M30 56 Q26 44 36 42 Q34 32 46 34 Q48 24 58 30 Q70 30 66 42 Q76 46 70 56 Z"/><circle cx="50" cy="26" r="4"/><path d="M50 22 Q54 16 59 16"/>`) },
     { name:"Owl", svg:S(`<ellipse cx="50" cy="54" rx="26" ry="30"/><path d="M30 30 L26 18 L38 28"/><path d="M70 30 L74 18 L62 28"/><circle cx="40" cy="44" r="9"/><circle cx="60" cy="44" r="9"/><circle cx="40" cy="44" r="3"/><circle cx="60" cy="44" r="3"/><path d="M47 50 L50 58 L53 50 Z"/><path d="M26 50 Q22 64 30 76"/><path d="M74 50 Q78 64 70 76"/><path d="M40 64 Q50 68 60 64"/><path d="M38 72 Q50 77 62 72"/><path d="M44 84 V88 M41 88 H47"/><path d="M56 84 V88 M53 88 H59"/><path d="M16 84 H84"/>`) },
-    { name:"Star",  svg:S(`<path d="M50 8 L61 37 L92 38 L67 57 L76 88 L50 70 L24 88 L33 57 L8 38 L39 37 Z"/>`) },
-    { name:"Heart", svg:S(`<path d="M50 86 C16 62 12 38 27 27 C39 18 50 27 50 38 C50 27 61 18 73 27 C88 38 84 62 50 86 Z"/>`) },
-    { name:"Flower",svg:S(`<circle cx="50" cy="40" r="11"/><circle cx="50" cy="21" r="11"/><circle cx="68" cy="32" r="11"/><circle cx="68" cy="51" r="11"/><circle cx="32" cy="51" r="11"/><circle cx="32" cy="32" r="11"/><path d="M50 60 V92"/><path d="M50 78 q15 -2 19 -15"/><path d="M50 84 q-15 -2 -19 -14"/>`) },
-    { name:"House", svg:S(`<rect x="22" y="46" width="56" height="42"/><path d="M15 48 L50 18 L85 48"/><rect x="40" y="63" width="16" height="25"/><rect x="28" y="55" width="12" height="12"/><rect x="60" y="55" width="12" height="12"/><rect x="64" y="26" width="9" height="14"/>`) },
-    { name:"Sun",   svg:S(`<circle cx="50" cy="50" r="22"/><path d="M50 12 V23"/><path d="M50 77 V88"/><path d="M12 50 H23"/><path d="M77 50 H88"/><path d="M23 23 L31 31"/><path d="M77 23 L69 31"/><path d="M23 77 L31 69"/><path d="M77 77 L69 69"/><circle cx="43" cy="46" r="2.3"/><circle cx="57" cy="46" r="2.3"/><path d="M42 56 q8 8 16 0"/>`) },
-    { name:"Fish",  svg:S(`<path d="M20 50 Q40 26 66 50 Q40 74 20 50 Z"/><path d="M66 50 L86 36 L86 64 Z"/><circle cx="31" cy="46" r="2.4"/><path d="M40 36 Q46 31 52 35"/><path d="M40 64 Q46 69 52 65"/>`) },
-    { name:"Butterfly", svg:S(`<path d="M50 30 V72"/><ellipse cx="33" cy="40" rx="16" ry="13"/><ellipse cx="67" cy="40" rx="16" ry="13"/><ellipse cx="36" cy="64" rx="12" ry="10"/><ellipse cx="64" cy="64" rx="12" ry="10"/><path d="M50 30 Q44 19 37 18"/><path d="M50 30 Q56 19 63 18"/>`) },
-    { name:"Car",   svg:S(`<path d="M10 62 L17 48 H34 L43 37 H62 L71 48 H90 V62 Z"/><circle cx="30" cy="62" r="8"/><circle cx="70" cy="62" r="8"/><rect x="45" y="41" width="14" height="9"/><rect x="30" y="41" width="11" height="9"/>`) },
-    { name:"Balloon", svg:S(`<ellipse cx="50" cy="38" rx="25" ry="29"/><path d="M45 65 L50 72 L55 65 Z"/><path d="M50 72 Q58 84 49 94"/>`) },
-    { name:"Ice cream", svg:S(`<path d="M35 44 L50 90 L65 44"/><path d="M40 56 L52 70 M48 50 L62 64"/><circle cx="43" cy="38" r="12"/><circle cx="58" cy="38" r="12"/><circle cx="50" cy="27" r="12"/>`) },
-    { name:"Kitty", svg:S(`<circle cx="50" cy="54" r="27"/><path d="M30 38 L25 16 L43 30 Z"/><path d="M70 38 L75 16 L57 30 Z"/><circle cx="41" cy="52" r="3"/><circle cx="59" cy="52" r="3"/><path d="M47 60 L50 64 L53 60 Z"/><path d="M50 64 V69"/><path d="M50 67 Q44 71 38 69"/><path d="M50 67 Q56 71 62 69"/><path d="M31 56 H15"/><path d="M31 62 H17"/><path d="M69 56 H85"/><path d="M69 62 H83"/>`) },
-    { name:"Rocket", svg:S(`<path d="M50 12 Q66 28 66 52 V66 H34 V52 Q34 28 50 12 Z"/><circle cx="50" cy="40" r="8"/><path d="M34 56 L22 72 L34 66"/><path d="M66 56 L78 72 L66 66"/><path d="M42 66 H58 L52 82 H48 Z"/>`) },
+    { name:"Fairy", svg:S(`<path d="M44 42 Q22 28 18 46 Q22 62 44 53 Z"/><path d="M56 42 Q78 28 82 46 Q78 62 56 53 Z"/><path d="M30 40 Q26 46 30 52"/><path d="M70 40 Q74 46 70 52"/><circle cx="50" cy="24" r="9"/><path d="M41 22 Q36 30 40 41"/><path d="M59 22 Q64 30 60 41"/><path d="M43 17 Q50 12 57 17"/><circle cx="47" cy="24" r="1.2"/><circle cx="53" cy="24" r="1.2"/><path d="M47 28 Q50 30 53 28"/><circle cx="50" cy="13" r="2.5"/><path d="M45 33 Q42 37 42 41 L36 70 Q50 76 64 70 L58 41 Q58 37 55 33 Z"/><path d="M42 50 Q50 54 58 50"/><path d="M39 60 Q50 65 61 60"/><path d="M45 36 Q34 40 30 31"/><path d="M55 36 Q67 40 73 31"/><circle cx="78" cy="27" r="3.5"/><path d="M78 20 V24 M78 30 V34 M71 27 H75 M81 27 H85"/><path d="M46 70 V82"/><path d="M54 70 V82"/>`) },
+    { name:"Peacock", svg:S(`<ellipse cx="50" cy="62" rx="9" ry="14"/><circle cx="50" cy="38" r="6"/><path d="M50 44 V50"/><path d="M50 32 V27"/><circle cx="50" cy="25" r="1.6"/><circle cx="48" cy="37" r="1"/><path d="M44 39 L40 40"/><path d="M50 72 Q20 60 14 30"/><path d="M50 72 Q35 64 26 38"/><path d="M50 72 V24"/><path d="M50 72 Q65 64 74 38"/><path d="M50 72 Q80 60 86 30"/><circle cx="14" cy="28" r="4.5"/><circle cx="26" cy="36" r="4.5"/><circle cx="50" cy="22" r="4.5"/><circle cx="74" cy="36" r="4.5"/><circle cx="86" cy="28" r="4.5"/><circle cx="14" cy="28" r="1.6"/><circle cx="26" cy="36" r="1.6"/><circle cx="50" cy="22" r="1.6"/><circle cx="74" cy="36" r="1.6"/><circle cx="86" cy="28" r="1.6"/><path d="M47 76 V82 M44 82 H50"/><path d="M53 76 V82 M50 82 H56"/>`) },
+    { name:"Elephant", svg:S(`<ellipse cx="54" cy="52" rx="24" ry="19"/><circle cx="32" cy="46" r="16"/><path d="M30 35 Q17 33 19 50 Q28 55 35 46 Z"/><path d="M22 50 Q13 58 17 70 Q24 73 24 65 Q22 58 30 56"/><circle cx="30" cy="42" r="1.6"/><path d="M24 57 Q22 63 27 65"/><rect x="38" y="68" width="8" height="14" rx="2"/><rect x="50" y="68" width="8" height="14" rx="2"/><rect x="64" y="66" width="8" height="14" rx="2"/><path d="M46 39 Q60 33 74 43 L70 56 Q58 50 47 54 Z"/><circle cx="54" cy="44" r="2"/><circle cx="61" cy="43" r="2"/><circle cx="68" cy="46" r="2"/><path d="M48 54 l3 4 M55 55 l3 4 M62 55 l3 4"/><path d="M77 50 Q83 54 81 62"/>`) },
+    { name:"Turtle", svg:S(`<path d="M26 56 Q26 36 50 36 Q74 36 74 56 Q74 66 50 66 Q26 66 26 56 Z"/><path d="M50 36 V66"/><path d="M38 38 Q34 52 40 64"/><path d="M62 38 Q66 52 60 64"/><path d="M28 54 H72"/><path d="M44 46 h12 l3 6 -3 6 h-12 l-3 -6 Z"/><circle cx="81" cy="54" r="8"/><circle cx="84" cy="52" r="1.3"/><path d="M87 56 H89"/><path d="M32 66 Q28 74 35 76 L40 70"/><path d="M68 66 Q72 74 65 76 L60 70"/><path d="M24 58 Q18 60 20 65"/>`) },
+    { name:"Bouquet", svg:S(`<path d="M38 70 Q34 87 50 91 Q66 87 62 70 Z"/><path d="M40 70 H60"/><path d="M42 79 Q50 83 58 79"/><path d="M50 70 V46"/><path d="M50 66 Q40 58 40 48"/><path d="M50 66 Q60 58 60 48"/><path d="M50 60 Q44 58 42 52 Q48 54 50 60"/><path d="M50 56 Q56 54 58 48 Q52 50 50 56"/><circle cx="50" cy="38" r="5"/><circle cx="50" cy="30" r="5"/><circle cx="58" cy="34" r="5"/><circle cx="55" cy="43" r="5"/><circle cx="45" cy="43" r="5"/><circle cx="42" cy="34" r="5"/><circle cx="50" cy="37" r="2"/><circle cx="38" cy="46" r="3.6"/><circle cx="38" cy="40" r="3.6"/><circle cx="44" cy="43" r="3.6"/><circle cx="32" cy="43" r="3.6"/><circle cx="62" cy="46" r="3.6"/><circle cx="62" cy="40" r="3.6"/><circle cx="68" cy="43" r="3.6"/><circle cx="56" cy="46" r="3.6"/>`) },
+    { name:"Birthday Cake", svg:S(`<rect x="24" y="64" width="52" height="20" rx="3"/><rect x="32" y="48" width="36" height="18" rx="3"/><rect x="40" y="34" width="20" height="16" rx="3"/><path d="M24 64 q6.5 6 13 0 q6.5 6 13 0 q6.5 6 13 0 q6.5 6 13 0"/><path d="M32 48 q9 6 18 0 q9 6 18 0"/><path d="M40 34 q10 6 20 0"/><rect x="47" y="22" width="6" height="12"/><path d="M50 22 Q47 17 50 13 Q53 17 50 22"/><circle cx="34" cy="74" r="2"/><circle cx="50" cy="76" r="2"/><circle cx="66" cy="74" r="2"/><circle cx="40" cy="58" r="2"/><circle cx="60" cy="58" r="2"/><path d="M18 84 H82"/>`) },
+    { name:"Under the Sea", svg:S(`<path d="M28 40 Q42 28 58 40 Q42 52 28 40 Z"/><path d="M58 40 L70 32 L70 48 Z"/><circle cx="38" cy="38" r="1.6"/><path d="M40 40 Q44 44 48 40"/><path d="M58 64 Q66 58 74 64 Q66 70 58 64 Z"/><path d="M58 64 L52 60 L52 68 Z"/><circle cx="64" cy="30" r="2.5"/><circle cx="70" cy="24" r="1.8"/><circle cx="75" cy="19" r="1.2"/><path d="M24 84 Q20 72 26 64 Q22 56 28 48"/><path d="M32 84 Q36 74 30 66"/><path d="M64 84 Q66 74 60 70 M68 84 Q76 78 76 68 M68 84 Q60 78 58 70"/><path d="M44 76 l3 6 6 1 -4 4 1 6 -6 -3 -6 3 1 -6 -4 -4 6 -1 Z"/><path d="M12 84 H88"/>`) },
   ];
 
   // ---------- Colors & sizes ----------
@@ -166,8 +178,10 @@
   const SPRINKLE_COLORS = ["#ff3b30","#ff9500","#ffcc00","#34c759","#1e88ff","#9c27b0","#ff2d92","#00bcd4","#ffffff"];
   // Special glitter brushes Saira likes
   const SPECIALS = [
-    { id:"sparkle",  bg:"radial-gradient(circle at 50% 38%, #ffffff, #fff0a6 45%, #ffd700 78%)" },
-    { id:"sprinkle", bg:"conic-gradient(#ff3b30,#ff9500,#ffcc00,#34c759,#1e88ff,#9c27b0,#ff2d92,#ff3b30)" },
+    { id:"rainbow",        bg:"linear-gradient(135deg,#ff3b30,#ff9500,#ffd000,#34c759,#1e88ff,#9c27b0)" },
+    { id:"rainbowsparkle", bg:"radial-gradient(circle at 50% 32%, #fff 0 16%, rgba(255,255,255,0) 17%), conic-gradient(#ff3b30,#ffcc00,#34c759,#1e88ff,#9c27b0,#ff2d92,#ff3b30)" },
+    { id:"sparkle",        bg:"radial-gradient(circle at 50% 38%, #ffffff, #fff0a6 45%, #ffd700 78%)" },
+    { id:"sprinkle",       bg:"conic-gradient(#ff3b30,#ff9500,#ffcc00,#34c759,#1e88ff,#9c27b0,#ff2d92,#ff3b30)" },
   ];
 
   // ---------- Canvas ----------
@@ -191,9 +205,11 @@
     const r = canvas.getBoundingClientRect();
     return { x:(e.clientX - r.left) * (RES / r.width), y:(e.clientY - r.top) * (RES / r.height) };
   }
+  let strokeOverride = null, rainbowHue = 0;
+  function nextRainbow(){ rainbowHue = (rainbowHue + 10) % 360; return `hsl(${rainbowHue} 90% 55%)`; }
   function paintStyle(){
-    ctx.strokeStyle = erasing ? "#ffffff" : curColor;
-    ctx.fillStyle   = erasing ? "#ffffff" : curColor;
+    const col = erasing ? "#ffffff" : (strokeOverride || curColor);
+    ctx.strokeStyle = col; ctx.fillStyle = col;
     ctx.lineWidth   = erasing ? curSize*1.7 : curSize;
     ctx.lineCap = "round"; ctx.lineJoin = "round";
   }
@@ -237,15 +253,24 @@
     ctx.restore();
   }
 
+  function rainbowDot(x,y){
+    strokeOverride = nextRainbow();
+    ctx.fillStyle = strokeOverride;
+    ctx.beginPath(); ctx.arc(x, y, curSize/2, 0, Math.PI*2); ctx.fill();
+    strokeOverride = null;
+    if(brushMode==="rainbowsparkle") sparkleAt(x,y);
+  }
   function paintDot(p){
     if(erasing){ dotSolid(p); return; }
     if(brushMode==="sprinkle"){ sprinkleAt(p.x,p.y); return; }
+    if(brushMode==="rainbow" || brushMode==="rainbowsparkle"){ rainbowDot(p.x,p.y); return; }
     dotSolid(p);
     if(brushMode==="sparkle") sparkleAt(p.x,p.y);
   }
   function paintSeg(a,b){
     if(erasing){ segSolid(a,b); return; }
     if(brushMode==="sprinkle"){ depositAlong(a,b,sprinkleAt); return; }
+    if(brushMode==="rainbow" || brushMode==="rainbowsparkle"){ depositAlong(a,b,rainbowDot); return; }
     segSolid(a,b);
     if(brushMode==="sparkle") depositAlong(a,b,sparkleAt);
   }
@@ -266,6 +291,7 @@
   function endDraw(e){
     if(!drawing || (e && e.pointerId !== drawPid)) return;
     drawing = false; drawPid = null; last = null;
+    scheduleAutosave();
   }
   canvas.addEventListener("pointerup", endDraw);
   canvas.addEventListener("pointercancel", endDraw);
@@ -281,6 +307,61 @@
       if(!img){ img = document.createElement("img"); img.className = "thumbColor"; card.insertBefore(img, card.firstChild); }
       img.src = data;
     } else if(img){ img.remove(); }
+  }
+
+  // Scrolling reel of previously colored pages on the home screen.
+  // Only pictures actually colored (>= MIN_COV of the page painted) appear here.
+  const MIN_COV = 0.01;
+  function coverageOf(i, dataURL){
+    return new Promise((res)=>{
+      const stored = localStorage.getItem(thumbKey(i) + ":cov");
+      if(stored != null){ res(parseFloat(stored)); return; }
+      const img = new Image();
+      img.onload = ()=>{
+        const N = 80, c = document.createElement("canvas"); c.width = N; c.height = N;
+        const cc = c.getContext("2d"); cc.drawImage(img, 0, 0, N, N);
+        const d = cc.getImageData(0, 0, N, N).data; let nw = 0;
+        for(let p=0; p<d.length; p+=4){ if(!(d[p]>245 && d[p+1]>245 && d[p+2]>245)) nw++; }
+        const cov = nw/(N*N);
+        try{ localStorage.setItem(thumbKey(i) + ":cov", cov.toFixed(4)); }catch(e){}
+        res(cov);
+      };
+      img.onerror = ()=> res(0);
+      img.src = dataURL;
+    });
+  }
+  async function buildReel(){
+    const wrap = document.getElementById("reelWrap");
+    const track = document.getElementById("reelTrack");
+    const saved = [];
+    PICTURES.forEach((p,i)=>{ const d = localStorage.getItem(thumbKey(i)); if(d) saved.push({ i, d }); });
+    const covs = await Promise.all(saved.map(o => coverageOf(o.i, o.d)));
+    const colored = saved.filter((o,k)=> covs[k] >= MIN_COV);
+    if(colored.length === 0){ wrap.classList.add("hidden"); track.innerHTML = ""; return; }
+    wrap.classList.remove("hidden");
+    const make = (o)=>{
+      const el = document.createElement("div"); el.className = "reelItem";
+      const img = document.createElement("img"); img.className = "reelColor"; img.src = o.d;
+      const out = document.createElement("div"); out.className = "reelOutline"; out.innerHTML = PICTURES[o.i].svg;
+      el.appendChild(img); el.appendChild(out);
+      el.addEventListener("click", ()=> openPicture(o.i));
+      return el;
+    };
+    track.innerHTML = "";
+    track.style.animation = "none"; track.style.width = ""; track.style.justifyContent = "";
+    colored.forEach(o => track.appendChild(make(o)));   // one entry per colored drawing
+    requestAnimationFrame(()=>{
+      const reel = track.parentElement;
+      if(track.scrollWidth > reel.clientWidth + 4){
+        colored.forEach(o => track.appendChild(make(o)));   // 2nd copy = seamless loop
+        track.style.width = "max-content";
+        track.style.justifyContent = "flex-start";
+        track.style.animation = "marquee " + Math.max(16, colored.length * 6) + "s linear infinite";
+      } else {
+        track.style.width = "100%";
+        track.style.justifyContent = "center";
+      }
+    });
   }
 
   // ---------- Build gallery ----------
@@ -352,25 +433,39 @@
   document.getElementById("undoBtn").addEventListener("click", undo);
   document.getElementById("clearBtn").addEventListener("click", clearAll);
   document.getElementById("backBtn").addEventListener("click", ()=>{
-    refreshCard(currentIndex);
+    saveCurrent(true);        // auto-save on the way out
+    studioOpen = false;
+    buildReel();
     document.getElementById("studio").classList.add("hidden");
     document.getElementById("gallery").classList.remove("hidden");
   });
 
-  // ---------- Save ----------
-  let toastT = null;
+  // ---------- Save / Auto-save ----------
+  let toastT = null, studioOpen = false, autosaveT = null;
   function showToast(msg){
     const t = document.getElementById("toast");
     t.textContent = msg; t.classList.add("show");
     clearTimeout(toastT); toastT = setTimeout(()=> t.classList.remove("show"), 1200);
   }
-  document.getElementById("saveBtn").addEventListener("click", ()=>{
+  function paintedCoverage(){
+    const N = 100, c = document.createElement("canvas"); c.width = N; c.height = N;
+    const cc = c.getContext("2d"); cc.drawImage(canvas, 0, 0, N, N);
+    const d = cc.getImageData(0, 0, N, N).data; let nw = 0;
+    for(let p=0; p<d.length; p+=4){ if(!(d[p]>245 && d[p+1]>245 && d[p+2]>245)) nw++; }
+    return nw / (N*N);
+  }
+  function saveCurrent(silent){
     try{
       localStorage.setItem(thumbKey(currentIndex), canvas.toDataURL("image/jpeg", 0.82));
+      localStorage.setItem(thumbKey(currentIndex) + ":cov", paintedCoverage().toFixed(4));
       refreshCard(currentIndex);
-      showToast("Saved!");
-    }catch(e){ showToast("Couldn't save — storage full"); }
-  });
+      if(!silent) showToast("Saved!");
+    }catch(e){ if(!silent) showToast("Couldn't save — storage full"); }
+  }
+  function scheduleAutosave(){ if(!studioOpen) return; clearTimeout(autosaveT); autosaveT = setTimeout(()=> saveCurrent(true), 600); }
+  document.getElementById("saveBtn").addEventListener("click", ()=> saveCurrent(false));
+  window.addEventListener("pagehide", ()=>{ if(studioOpen) saveCurrent(true); });
+  document.addEventListener("visibilitychange", ()=>{ if(document.hidden && studioOpen) saveCurrent(true); });
 
   // ---------- Vibey background music (generated, offline-friendly) ----------
   let actx = null, musicOn = true, musicTimer = null, musicGain = null, mStep = 0;
@@ -430,12 +525,27 @@
     pickSize(SIZES[1], sizeEls[1]);
     document.getElementById("gallery").classList.add("hidden");
     document.getElementById("studio").classList.remove("hidden");
+    studioOpen = true;
   }
 
   // initial selected states (in case studio shown without openPicture)
   swatchEls[DEFAULT_INDEX].classList.add("active");
   sizeEls[1].classList.add("active");
   fillWhite();
+
+  // Clean up saved data for pictures that no longer exist
+  (function cleanupStorage(){
+    const valid = new Set();
+    PICTURES.forEach(p => { valid.add("saira-coloring:" + p.name); valid.add("saira-coloring:" + p.name + ":cov"); });
+    const drop = [];
+    for(let i=0; i<localStorage.length; i++){
+      const k = localStorage.key(i);
+      if(k && k.indexOf("saira-coloring:") === 0 && !valid.has(k)) drop.push(k);
+    }
+    drop.forEach(k => localStorage.removeItem(k));
+  })();
+
+  buildReel();
 
   document.addEventListener("gesturestart", e=>e.preventDefault());
 
